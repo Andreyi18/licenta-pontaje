@@ -28,6 +28,19 @@ public class UserResponse {
         this.updatedAt = updatedAt;
     }
 
+    public UUID getId() { return id; }
+    public String getEmail() { return email; }
+    public String getFirstName() { return firstName; }
+    public String getLastName() { return lastName; }
+    public String getFullName() { return fullName; }
+    public UserRole getRole() { return role; }
+    public UserStatus getStatus() { return status; }
+    public UUID getDepartmentId() { return departmentId; }
+    public String getDepartmentName() { return departmentName; }
+    public String getDepartmentCode() { return departmentCode; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+
     public static class Builder {
         private UUID id;
         private String email;
