@@ -12,6 +12,7 @@ import MainLayout from "./components/layout/MainLayout";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProfilePage from "./pages/ProfilePage";
+import SecretariatDashboardPage from "./pages/SecretariatDashboardPage";
 
 // tipuri
 import { UserRole } from "./types";
@@ -76,16 +77,16 @@ const App: React.FC = () => {
                 />
 
                 {/* secretariat routes */}
-                <Route
-                  path="secretariat"
-                  element={
-                    <ProtectedRoute
-                      roles={[UserRole.SECRETARIAT, UserRole.ADMIN]}
-                    >
-                      <div>Secretariat Dashboard - Todo</div>
-                    </ProtectedRoute>
-                  }
-                />
+                    <Route
+                      path="secretariat"
+                      element={
+                        <ProtectedRoute
+                          roles={[UserRole.SECRETARIAT, UserRole.ADMIN]}
+                        >
+                          <SecretariatDashboardPage />
+                        </ProtectedRoute>
+                      }
+                    />
 
                 {/* admin routes */}
                 <Route
