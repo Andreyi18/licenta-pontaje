@@ -1,5 +1,6 @@
 package ro.upt.pontaje.dto.user;
 
+import org.hibernate.Hibernate;
 import ro.upt.pontaje.model.User;
 import ro.upt.pontaje.model.UserRole;
 import ro.upt.pontaje.model.UserStatus;
@@ -99,7 +100,8 @@ public class UserResponse {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt());
 
-        if (user.getDepartment() != null) {
+        // Evităm LazyInitializationException când department este LAZY și nu e inițializat
+        if (user.getDepartment() != null && Hibernate.isInitialized(user.getDepartment())) {
             if (user.getDepartment().getId() != null) {
                 builder.departmentId(user.getDepartment().getId());
             }

@@ -241,6 +241,29 @@ public class TimesheetService {
     }
 
     /**
+     * Găsește pontajele pentru o perioadă și un anumit status
+     */
+    @Transactional(readOnly = true)
+    public List<TimesheetResponse> findByPeriodAndStatus(Integer month, Integer year, TimesheetStatus status) {
+        return timesheetRepository.findByMonthAndYearAndStatusOrderByUserLastNameAsc(month, year, status)
+            .stream()
+            .map(TimesheetResponse::fromEntity)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Găsește entitățile Timesheet pentru o perioadă și o listă de statusuri
+     * (util pentru generarea în masă a documentelor PDF pentru secretariat)
+     */
+    @Transactional(readOnly = true)
+    public List<Timesheet> findEntitiesByPeriodAndStatuses(Integer month, Integer year, List<TimesheetStatus> statuses) {
+        return timesheetRepository.findByMonthAndYearOrderByUserLastNameAsc(month, year)
+            .stream()
+            .filter(t -> statuses.contains(t.getStatus()))
+            .collect(Collectors.toList());
+    }
+
+    /**
      * Returnează ID-urile utilizatorilor care nu au trimis pontajul
      */
     @Transactional(readOnly = true)

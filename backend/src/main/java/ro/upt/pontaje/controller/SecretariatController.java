@@ -6,7 +6,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ro.upt.pontaje.dto.timesheet.TimesheetResponse;
+import ro.upt.pontaje.exception.BadRequestException;
+import ro.upt.pontaje.model.AnnexType;
 import ro.upt.pontaje.model.Document;
+import ro.upt.pontaje.model.Timesheet;
 import ro.upt.pontaje.model.TimesheetStatus;
 import ro.upt.pontaje.repository.DocumentRepository;
 import ro.upt.pontaje.service.PdfGeneratorService;
@@ -51,8 +54,9 @@ public class SecretariatController {
         
         if (departmentId != null) {
             timesheets = timesheetService.findByDepartmentAndPeriod(departmentId, month, year);
-        } else if (status == TimesheetStatus.SUBMITTED) {
-            timesheets = timesheetService.findSubmittedByPeriod(month, year);
+        } else if (status != null) {
+            // Filtrare explicită după status (SUBMITTED / APPROVED / DRAFT)
+            timesheets = timesheetService.findByPeriodAndStatus(month, year, status);
         } else {
             timesheets = timesheetService.findAllByPeriod(month, year);
         }
@@ -100,17 +104,41 @@ public class SecretariatController {
             @RequestParam(required = false) UUID departmentId) throws IOException {
         
         List<Document> documents;
-        
+
         if (departmentId != null) {
             documents = documentRepository.findByDepartmentAndPeriod(departmentId, month, year);
         } else {
             documents = documentRepository.findByPeriod(month, year);
         }
-        
+
         if (documents.isEmpty()) {
-            return ResponseEntity.noContent().build();
+            // Nu există încă documente – generăm în masă pentru pontajele SUBMITTED/APPROVED
+            List<Timesheet> timesheetsForDocs = timesheetService
+                    .findEntitiesByPeriodAndStatuses(month, year,
+                            List.of(TimesheetStatus.SUBMITTED, TimesheetStatus.APPROVED));
+
+            if (timesheetsForDocs.isEmpty()) {
+                throw new BadRequestException("Nu există pontaje trimise sau aprobate pentru perioada selectată");
+            }
+
+            for (Timesheet t : timesheetsForDocs) {
+                if (!documentRepository.existsByTimesheetIdAndAnnexType(t.getId(), AnnexType.ANEXA_1)) {
+                    pdfGeneratorService.generateAnnex(t, AnnexType.ANEXA_1);
+                }
+            }
+
+            // Reîncărcăm documentele după generare
+            if (departmentId != null) {
+                documents = documentRepository.findByDepartmentAndPeriod(departmentId, month, year);
+            } else {
+                documents = documentRepository.findByPeriod(month, year);
+            }
+
+            if (documents.isEmpty()) {
+                throw new BadRequestException("Nu există documente generate pentru perioada selectată");
+            }
         }
-        
+
         byte[] mergedPdf = pdfGeneratorService.mergePdfs(documents);
         
         String fileName = String.format("pontaje_consolidate_%d_%d_%s.pdf",

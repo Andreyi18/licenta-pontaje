@@ -34,11 +34,13 @@ import {
   Visibility as ViewIcon
 } from "@mui/icons-material";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import { secretariatApi } from "../api/api";
 import type { Timesheet } from "../types";
 import { TimesheetStatus, MONTHS } from "../types";
 
 const SecretariatDashboardPage: React.FC = () => {
+  const navigate = useNavigate();
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
@@ -255,10 +257,15 @@ const SecretariatDashboardPage: React.FC = () => {
                   <TableCell sx={{ fontWeight: 600 }}>{ts.totalHours} h</TableCell>
                   <TableCell>{getStatusChip(ts.status)}</TableCell>
                   <TableCell align="right">
-                    <Button 
-                      size="small" 
+                    <Button
+                      size="small"
                       startIcon={<ViewIcon />}
-                      onClick={() => toast("Detaliile sunt vizibile în modul de editare.", { icon: "ℹ️" })}
+                      onClick={() =>
+                        navigate(
+                          `/secretariat/timesheets/${ts.id ?? "details"}`,
+                          { state: { timesheet: ts } },
+                        )
+                      }
                     >
                       Vezi
                     </Button>

@@ -9,6 +9,7 @@ import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
@@ -143,15 +144,30 @@ public class PdfGeneratorService {
         documents.sort(Comparator.comparing(d -> d.getUser().getLastName()));
 
         try (PDDocument mergedDoc = new PDDocument()) {
+            boolean hasPages = false;
+
             for (Document doc : documents) {
                 File file = new File(doc.getFilePath());
-                if (file.exists()) {
-                    try (PDDocument pdf = Loader.loadPDF(file)) {
-                        for (PDPage page : pdf.getPages()) {
-                            mergedDoc.addPage(mergedDoc.importPage(page));
-                        }
+                if (!file.exists()) {
+                    log.warn("Fișierul PDF nu există pe disc pentru documentul {} - path: {}", doc.getId(), doc.getFilePath());
+                    continue;
+                }
+
+                try (PDDocument pdf = Loader.loadPDF(file)) {
+                    if (pdf.getNumberOfPages() == 0) {
+                        log.warn("Document PDF fără pagini pentru documentul {} - path: {}", doc.getId(), doc.getFilePath());
+                        continue;
+                    }
+
+                    for (PDPage page : pdf.getPages()) {
+                        mergedDoc.addPage(mergedDoc.importPage(page));
+                        hasPages = true;
                     }
                 }
+            }
+
+            if (!hasPages) {
+                throw new BadRequestException("Nu există pagini valide de concatenat");
             }
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -183,14 +199,14 @@ public class PdfGeneratorService {
         cs.beginText();
         cs.setFont(fontBold, 14);
         cs.newLineAtOffset(MARGIN, y);
-        cs.showText("UNIVERSITATEA POLITEHNICA TIMISOARA");
+        cs.showText(sanitizeForPdf("UNIVERSITATEA POLITEHNICA TIMISOARA"));
         cs.endText();
 
         y -= 20;
         cs.beginText();
         cs.setFont(fontRegular, 10);
         cs.newLineAtOffset(MARGIN, y);
-        cs.showText("Piata Victoriei nr. 2, Timisoara 300006, Romania");
+        cs.showText(sanitizeForPdf("Piata Victoriei nr. 2, Timisoara 300006, Romania"));
         cs.endText();
 
         return y - 40;
@@ -198,7 +214,8 @@ public class PdfGeneratorService {
 
     private float drawTitle(PDPageContentStream cs, PDType1Font fontBold, 
                            AnnexType annexType, float pageWidth, float y) throws IOException {
-        String title = annexType.getDisplayName().toUpperCase();
+        String rawTitle = annexType.getDisplayName().toUpperCase();
+        String title = sanitizeForPdf(rawTitle);
         cs.beginText();
         cs.setFont(fontBold, 12);
         
@@ -211,7 +228,7 @@ public class PdfGeneratorService {
         y -= 15;
         
         // Subtitlu
-        String subtitle = annexType.getFullTitle();
+        String subtitle = sanitizeForPdf(annexType.getFullTitle());
         cs.beginText();
         cs.setFont(fontBold, 9);
         cs.newLineAtOffset(MARGIN, y);
@@ -221,30 +238,47 @@ public class PdfGeneratorService {
         return y - 30;
     }
 
+    /**
+     * Înlocuiește caracterele românești care nu pot fi reprezentate în Helvetica/WinAnsi
+     * pentru a evita IllegalArgumentException în PDFBox.
+     */
+    private String sanitizeForPdf(String text) {
+        if (text == null) return "";
+        return text
+            .replace("ă", "a").replace("Ă", "A")
+            .replace("â", "a").replace("Â", "A")
+            .replace("î", "i").replace("Î", "I")
+            .replace("ș", "s").replace("Ș", "S")
+            .replace("ţ", "t").replace("Ţ", "T")
+            .replace("ț", "t").replace("Ț", "T");
+    }
+
     private float drawUserInfo(PDPageContentStream cs, PDType1Font fontRegular,
                               User user, Timesheet timesheet, float pageWidth, float y) throws IOException {
         String[] months = {"", "Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie",
                           "Iulie", "August", "Septembrie", "Octombrie", "Noiembrie", "Decembrie"};
 
-        String departmentName = user.getDepartment() != null ? 
-            user.getDepartment().getName() : "N/A";
+        String departmentName = "N/A";
+        if (user.getDepartment() != null && Hibernate.isInitialized(user.getDepartment())) {
+            departmentName = user.getDepartment().getName();
+        }
 
         cs.beginText();
         cs.setFont(fontRegular, 10);
         cs.newLineAtOffset(MARGIN, y);
-        cs.showText("Departament: " + departmentName);
+        cs.showText(sanitizeForPdf("Departament: " + departmentName));
         cs.endText();
 
         y -= 15;
         cs.beginText();
         cs.newLineAtOffset(MARGIN, y);
-        cs.showText("Cadru didactic: " + user.getFullName());
+        cs.showText(sanitizeForPdf("Cadru didactic: " + user.getFullName()));
         cs.endText();
 
         y -= 15;
         cs.beginText();
         cs.newLineAtOffset(MARGIN, y);
-        cs.showText("Perioada: " + months[timesheet.getMonth()] + " " + timesheet.getYear());
+        cs.showText(sanitizeForPdf("Perioada: " + months[timesheet.getMonth()] + " " + timesheet.getYear()));
         cs.endText();
 
         return y - 25;
@@ -328,6 +362,7 @@ public class PdfGeneratorService {
 
         // Adaugă text
         if (text != null && !text.isEmpty()) {
+            text = sanitizeForPdf(text);
             cs.beginText();
             cs.setFont(font, header ? 8 : 7);
             
@@ -350,27 +385,27 @@ public class PdfGeneratorService {
         cs.beginText();
         cs.setFont(fontBold, 10);
         cs.newLineAtOffset(MARGIN, y);
-        cs.showText("TOTAL ORE:");
+        cs.showText(sanitizeForPdf("TOTAL ORE:"));
         cs.endText();
 
         y -= 15;
         cs.beginText();
         cs.setFont(fontRegular, 10);
         cs.newLineAtOffset(MARGIN, y);
-        cs.showText("Ore in norma: " + timesheet.getTotalNormaHours());
+        cs.showText(sanitizeForPdf("Ore in norma: " + timesheet.getTotalNormaHours()));
         cs.endText();
 
         y -= 15;
         cs.beginText();
         cs.newLineAtOffset(MARGIN, y);
-        cs.showText("Ore plata cu ora: " + timesheet.getTotalPlataOraHours());
+        cs.showText(sanitizeForPdf("Ore plata cu ora: " + timesheet.getTotalPlataOraHours()));
         cs.endText();
 
         y -= 15;
         cs.beginText();
         cs.setFont(fontBold, 10);
         cs.newLineAtOffset(MARGIN, y);
-        cs.showText("TOTAL: " + timesheet.getTotalHours() + " ore");
+        cs.showText(sanitizeForPdf("TOTAL: " + timesheet.getTotalHours() + " ore"));
         cs.endText();
 
         // Semnături
@@ -378,12 +413,12 @@ public class PdfGeneratorService {
         cs.beginText();
         cs.setFont(fontRegular, 9);
         cs.newLineAtOffset(MARGIN, y);
-        cs.showText("Semnatura cadru didactic: ____________________");
+        cs.showText(sanitizeForPdf("Semnatura cadru didactic: ____________________"));
         cs.endText();
 
         cs.beginText();
         cs.newLineAtOffset(pageWidth / 2, y);
-        cs.showText("Data: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+        cs.showText(sanitizeForPdf("Data: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))));
         cs.endText();
     }
 }

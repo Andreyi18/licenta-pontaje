@@ -43,6 +43,11 @@ public class AuthController {
      */
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal User user) {
+        if (user == null) {
+            // Token lipsă sau invalid -> nu întoarcem 500, ci 401
+            return ResponseEntity.status(401).build();
+        }
+
         return ResponseEntity.ok(UserResponse.fromEntity(user));
     }
 

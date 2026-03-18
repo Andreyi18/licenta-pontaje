@@ -13,6 +13,7 @@ import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProfilePage from "./pages/ProfilePage";
 import SecretariatDashboardPage from "./pages/SecretariatDashboardPage";
+import SecretariatTimesheetDetailsPage from "./pages/SecretariatTimesheetDetailsPage";
 
 // tipuri
 import { UserRole } from "./types";
@@ -77,16 +78,26 @@ const App: React.FC = () => {
                 />
 
                 {/* secretariat routes */}
-                    <Route
-                      path="secretariat"
-                      element={
-                        <ProtectedRoute
-                          roles={[UserRole.SECRETARIAT, UserRole.ADMIN]}
-                        >
-                          <SecretariatDashboardPage />
-                        </ProtectedRoute>
-                      }
-                    />
+                <Route
+                  path="secretariat"
+                  element={
+                    <ProtectedRoute
+                      roles={[UserRole.SECRETARIAT, UserRole.ADMIN]}
+                    >
+                      <SecretariatDashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="secretariat/timesheets/:timesheetId"
+                  element={
+                    <ProtectedRoute
+                      roles={[UserRole.SECRETARIAT, UserRole.ADMIN]}
+                    >
+                      <SecretariatTimesheetDetailsPage />
+                    </ProtectedRoute>
+                  }
+                />
 
                 {/* admin routes */}
                 <Route
