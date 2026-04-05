@@ -5,6 +5,7 @@ import type {
   ProfileUpdateRequest,
   Timesheet,
   Schedule,
+  Document as AppDocument,
 } from "../types";
 
 const API_BASE_URL =
@@ -227,8 +228,8 @@ export const timesheetsApi = {
 
 // documents api
 export const documentsApi = {
-  getMine: (): Promise<Document[]> => {
-    return apiClient.get<Document[]>("/documents");
+  getMine: (): Promise<AppDocument[]> => {
+    return apiClient.get<AppDocument[]>("/documents");
   },
 
   generate: (
@@ -286,6 +287,12 @@ export const secretariatApi = {
 
   getTimesheetDetails: (timesheetId: string): Promise<Timesheet> => {
     return apiClient.get<Timesheet>(`/secretariat/timesheets/${timesheetId}`);
+  },
+
+  approveTimesheet: (timesheetId: string): Promise<Timesheet> => {
+    return apiClient.post<Timesheet>(
+      `/secretariat/timesheets/${timesheetId}/approve`,
+    );
   },
 
   mergeDocuments: async (

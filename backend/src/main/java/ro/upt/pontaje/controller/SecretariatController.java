@@ -162,6 +162,16 @@ public class SecretariatController {
     }
 
     /**
+     * Aprobă un pontaj
+     * POST /api/secretariat/timesheets/{timesheetId}/approve
+     */
+    @PostMapping("/timesheets/{timesheetId}/approve")
+    public ResponseEntity<TimesheetResponse> approveTimesheet(@PathVariable UUID timesheetId) {
+        TimesheetResponse approved = timesheetService.approve(timesheetId);
+        return ResponseEntity.ok(approved);
+    }
+
+    /**
      * DTO pentru sumar status pontaje
      */
     private record TimesheetStatusSummary(

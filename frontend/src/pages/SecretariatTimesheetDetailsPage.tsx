@@ -17,8 +17,12 @@ import {
   CircularProgress,
   Breadcrumbs,
   Link as MUILink,
+  Button,
 } from "@mui/material";
-import { ArrowBack as ArrowBackIcon } from "@mui/icons-material";
+import {
+  ArrowBack as ArrowBackIcon,
+  CheckCircle as ApproveIcon,
+} from "@mui/icons-material";
 import toast from "react-hot-toast";
 import { secretariatApi } from "../api/api";
 import type { Timesheet, TimesheetEntry } from "../types";
@@ -34,6 +38,7 @@ const SecretariatTimesheetDetailsPage: React.FC = () => {
     navigationState?.timesheet ?? null,
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [approving, setApproving] = useState(false);
 
   useEffect(() => {
     const loadDetails = async () => {
@@ -89,6 +94,20 @@ const SecretariatTimesheetDetailsPage: React.FC = () => {
     }
   };
 
+  const handleApprove = async () => {
+    if (!timesheet) return;
+    setApproving(true);
+    try {
+      const updated = await secretariatApi.approveTimesheet(timesheet.id);
+      setTimesheet(updated);
+      toast.success("Pontaj aprobat cu succes!");
+    } catch (err: any) {
+      toast.error(err.message || "Eroare la aprobare");
+    } finally {
+      setApproving(false);
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
     if (Number.isNaN(d.getTime())) return dateStr;
@@ -115,6 +134,23 @@ const SecretariatTimesheetDetailsPage: React.FC = () => {
             Detalii pontaj
           </Typography>
         </Box>
+        {timesheet?.status === TimesheetStatus.SUBMITTED && (
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={
+              approving ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <ApproveIcon />
+              )
+            }
+            onClick={handleApprove}
+            disabled={approving}
+          >
+            Aprobă pontajul
+          </Button>
+        )}
       </Box>
 
       <Breadcrumbs sx={{ mb: 2 }}>

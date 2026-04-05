@@ -14,6 +14,10 @@ import DashboardPage from "./pages/DashboardPage";
 import ProfilePage from "./pages/ProfilePage";
 import SecretariatDashboardPage from "./pages/SecretariatDashboardPage";
 import SecretariatTimesheetDetailsPage from "./pages/SecretariatTimesheetDetailsPage";
+import TimesheetPage from "./pages/TimesheetPage";
+import SchedulePage from "./pages/SchedulePage";
+import DocumentsPage from "./pages/DocumentsPage";
+import AdminUsersPage from "./pages/AdminUsersPage";
 
 // tipuri
 import { UserRole } from "./types";
@@ -56,7 +60,7 @@ const App: React.FC = () => {
                   path="schedule"
                   element={
                     <ProtectedRoute roles={[UserRole.CADRU_DIDACTIC]}>
-                      <div>Schedule Page - Todo</div>
+                      <SchedulePage />
                     </ProtectedRoute>
                   }
                 />
@@ -64,7 +68,7 @@ const App: React.FC = () => {
                   path="timesheet"
                   element={
                     <ProtectedRoute roles={[UserRole.CADRU_DIDACTIC]}>
-                      <div>Timesheet Page - Todo</div>
+                      <TimesheetPage />
                     </ProtectedRoute>
                   }
                 />
@@ -72,7 +76,7 @@ const App: React.FC = () => {
                   path="documents"
                   element={
                     <ProtectedRoute roles={[UserRole.CADRU_DIDACTIC]}>
-                      <div>Documents Page - Todo</div>
+                      <DocumentsPage />
                     </ProtectedRoute>
                   }
                 />
@@ -104,15 +108,7 @@ const App: React.FC = () => {
                   path="admin/users"
                   element={
                     <ProtectedRoute roles={[UserRole.ADMIN]}>
-                      <div>User Management - Todo</div>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="settings"
-                  element={
-                    <ProtectedRoute roles={[UserRole.ADMIN]}>
-                      <div>Settings - Todo</div>
+                      <AdminUsersPage />
                     </ProtectedRoute>
                   }
                 />

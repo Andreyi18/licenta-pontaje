@@ -203,6 +203,22 @@ public class TimesheetService {
         return TimesheetResponse.fromEntity(savedTimesheet, true);
     }
 
+    /**
+     * Aprobă un pontaj (secretariat/admin)
+     */
+    @Transactional
+    public TimesheetResponse approve(UUID timesheetId) {
+        Timesheet timesheet = findById(timesheetId);
+
+        if (timesheet.getStatus() != TimesheetStatus.SUBMITTED) {
+            throw new BadRequestException("Doar pontajele trimise pot fi aprobate");
+        }
+
+        timesheet.setStatus(TimesheetStatus.APPROVED);
+        Timesheet saved = timesheetRepository.save(timesheet);
+        return TimesheetResponse.fromEntity(saved, true);
+    }
+
     // ========== Metode pentru Secretariat ==========
 
     /**
