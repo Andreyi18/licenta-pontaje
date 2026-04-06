@@ -1,22 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Box, 
-  Typography, 
-  Grid, 
-  Card, 
-  CardContent, 
-  Button, 
-  FormControl, 
-  InputLabel, 
-  Select, 
-  MenuItem, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Paper, 
+import {
+  Box,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  Paper,
   Chip,
   CircularProgress,
   IconButton,
@@ -50,6 +51,8 @@ const SecretariatDashboardPage: React.FC = () => {
   const [stats, setStats] = useState({ total: 0, draft: 0, submitted: 0, approved: 0, missing: 0 });
   const [isLoading, setIsLoading] = useState(false);
   const [isMerging, setIsMerging] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // Load Data
   useEffect(() => {
@@ -242,7 +245,7 @@ const SecretariatDashboardPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {timesheets.map((ts) => (
+              {timesheets.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((ts) => (
                 <TableRow key={ts.id} hover>
                   <TableCell>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
@@ -274,6 +277,22 @@ const SecretariatDashboardPage: React.FC = () => {
               ))}
             </TableBody>
           </Table>
+        )}
+        {!isLoading && timesheets.length > 0 && (
+          <TablePagination
+            component="div"
+            count={timesheets.length}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            rowsPerPageOptions={[5, 10, 25]}
+            labelRowsPerPage="Rânduri pe pagină:"
+            labelDisplayedRows={({ from, to, count }) => `${from}–${to} din ${count}`}
+          />
         )}
       </TableContainer>
     </Box>

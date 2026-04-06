@@ -142,6 +142,17 @@ export interface Notification {
   createdAt: string;
 }
 
+// Tipul folosit pentru notificările din API (structura returnată de NotificationController)
+export interface AppNotification {
+  id: string;
+  type: string;
+  typeDisplay: string;
+  subject: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
 // types auth
 export interface LoginRequest {
   email: string;

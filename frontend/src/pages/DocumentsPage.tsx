@@ -336,9 +336,17 @@ const DocumentsPage: React.FC = () => {
             </Typography>
             <Divider sx={{ mb: 2 }} />
             {documents.length === 0 ? (
-              <Typography color="text.secondary" sx={{ textAlign: "center", py: 3 }}>
-                Nu există documente generate pentru această perioadă.
-              </Typography>
+              <Box sx={{ textAlign: "center", py: 4 }}>
+                <PdfIcon sx={{ fontSize: 48, color: "grey.300", mb: 1 }} />
+                <Typography color="text.secondary">
+                  Nu există documente generate pentru această perioadă.
+                </Typography>
+                {!canGenerate && (
+                  <Typography variant="caption" color="text.disabled">
+                    Trimite pontajul mai întâi pentru a putea genera anexele.
+                  </Typography>
+                )}
+              </Box>
             ) : (
               <TableContainer>
                 <Table size="small">

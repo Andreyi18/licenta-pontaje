@@ -24,10 +24,14 @@ public class TimesheetService {
 
     private final TimesheetRepository timesheetRepository;
     private final TimesheetEntryRepository timesheetEntryRepository;
+    private final NotificationService notificationService;
 
-    public TimesheetService(TimesheetRepository timesheetRepository, TimesheetEntryRepository timesheetEntryRepository) {
+    public TimesheetService(TimesheetRepository timesheetRepository,
+                            TimesheetEntryRepository timesheetEntryRepository,
+                            NotificationService notificationService) {
         this.timesheetRepository = timesheetRepository;
         this.timesheetEntryRepository = timesheetEntryRepository;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -199,7 +203,14 @@ public class TimesheetService {
 
         timesheet.submit();
         Timesheet savedTimesheet = timesheetRepository.save(timesheet);
-        
+
+        notificationService.create(
+            user,
+            NotificationType.SYSTEM,
+            "Pontaj trimis",
+            "Pontajul tău pentru " + timesheet.getPeriodDisplay() + " a fost trimis cu succes și așteaptă aprobarea secretariatului."
+        );
+
         return TimesheetResponse.fromEntity(savedTimesheet, true);
     }
 
@@ -216,6 +227,14 @@ public class TimesheetService {
 
         timesheet.setStatus(TimesheetStatus.APPROVED);
         Timesheet saved = timesheetRepository.save(timesheet);
+
+        notificationService.create(
+            timesheet.getUser(),
+            NotificationType.SYSTEM,
+            "Pontaj aprobat",
+            "Pontajul tău pentru " + timesheet.getPeriodDisplay() + " a fost aprobat de secretariat."
+        );
+
         return TimesheetResponse.fromEntity(saved, true);
     }
 

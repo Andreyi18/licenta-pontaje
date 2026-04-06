@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
@@ -18,6 +18,10 @@ import {
   MenuItem,
   useTheme,
   useMediaQuery,
+  Badge,
+  Popover,
+  Button,
+  Chip,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
@@ -31,9 +35,11 @@ import {
   Logout as LogoutIcon,
   AccountCircle as AccountIcon,
   ChevronLeft as ChevronLeftIcon,
+  DoneAll as DoneAllIcon,
 } from "@mui/icons-material";
 import { useAuth } from "../../context/AuthContext";
-import { UserRole } from "../../types";
+import { UserRole, type AppNotification } from "../../types";
+import { notificationsApi } from "../../api/api";
 
 const DRAWER_WIDTH = 260;
 
@@ -80,12 +86,6 @@ const navItems: NavItem[] = [
     icon: <PeopleIcon />,
     roles: [UserRole.ADMIN],
   },
-  {
-    title: "Setări",
-    path: "/settings",
-    icon: <SettingsIcon />,
-    roles: [UserRole.ADMIN],
-  },
 ];
 
 const MainLayout: React.FC = () => {
@@ -97,6 +97,46 @@ const MainLayout: React.FC = () => {
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  // notificari
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [notifAnchor, setNotifAnchor] = useState<null | HTMLElement>(null);
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  const loadNotifications = useCallback(async () => {
+    try {
+      const data = await notificationsApi.getAll();
+      setNotifications(data);
+    } catch {
+      // silent
+    }
+  }, []);
+
+  useEffect(() => {
+    loadNotifications();
+    // poll la fiecare 60 secunde
+    const interval = setInterval(loadNotifications, 60000);
+    return () => clearInterval(interval);
+  }, [loadNotifications]);
+
+  const handleNotifOpen = (e: React.MouseEvent<HTMLElement>) => {
+    setNotifAnchor(e.currentTarget);
+    loadNotifications();
+  };
+
+  const handleNotifClose = () => setNotifAnchor(null);
+
+  const handleMarkAllRead = async () => {
+    await notificationsApi.markAllAsRead();
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+  };
+
+  const handleMarkRead = async (id: string) => {
+    await notificationsApi.markAsRead(id);
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+    );
+  };
 
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) =>
@@ -275,10 +315,94 @@ const MainLayout: React.FC = () => {
 
           <Box sx={{ flexGrow: 1 }} />
 
-          {/* notificarile */}
-          <IconButton color="inherit" sx={{ mr: 1 }}>
-            <NotificationIcon />
+          {/* notificari */}
+          <IconButton color="inherit" sx={{ mr: 1 }} onClick={handleNotifOpen}>
+            <Badge badgeContent={unreadCount} color="error">
+              <NotificationIcon />
+            </Badge>
           </IconButton>
+
+          <Popover
+            open={Boolean(notifAnchor)}
+            anchorEl={notifAnchor}
+            onClose={handleNotifClose}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
+            PaperProps={{ sx: { width: 360, maxHeight: 480 } }}
+          >
+            {/* header popover */}
+            <Box
+              sx={{
+                px: 2,
+                py: 1.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottom: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                Notificări {unreadCount > 0 && `(${unreadCount} noi)`}
+              </Typography>
+              {unreadCount > 0 && (
+                <Button
+                  size="small"
+                  startIcon={<DoneAllIcon fontSize="small" />}
+                  onClick={handleMarkAllRead}
+                >
+                  Marchează toate
+                </Button>
+              )}
+            </Box>
+
+            {/* lista notificari */}
+            <Box sx={{ overflowY: "auto", maxHeight: 380 }}>
+              {notifications.length === 0 ? (
+                <Box sx={{ p: 4, textAlign: "center" }}>
+                  <NotificationIcon sx={{ fontSize: 40, color: "grey.300", mb: 1 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Nicio notificare
+                  </Typography>
+                </Box>
+              ) : (
+                notifications.map((notif) => (
+                  <Box
+                    key={notif.id}
+                    onClick={() => !notif.isRead && handleMarkRead(notif.id)}
+                    sx={{
+                      px: 2,
+                      py: 1.5,
+                      borderBottom: "1px solid",
+                      borderColor: "divider",
+                      backgroundColor: notif.isRead ? "transparent" : "primary.50",
+                      cursor: notif.isRead ? "default" : "pointer",
+                      "&:hover": { backgroundColor: "grey.50" },
+                      "&:last-child": { borderBottom: "none" },
+                    }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: notif.isRead ? 400 : 600 }}
+                      >
+                        {notif.subject}
+                      </Typography>
+                      {!notif.isRead && (
+                        <Chip label="Nou" size="small" color="primary" sx={{ height: 18, fontSize: "0.65rem" }} />
+                      )}
+                    </Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.3 }}>
+                      {notif.message}
+                    </Typography>
+                    <Typography variant="caption" color="text.disabled" sx={{ display: "block", mt: 0.5 }}>
+                      {new Date(notif.createdAt).toLocaleString("ro-RO")}
+                    </Typography>
+                  </Box>
+                ))
+              )}
+            </Box>
+          </Popover>
 
           {/* meniul utilizatorului */}
           <IconButton onClick={handleMenuOpen} color="inherit">

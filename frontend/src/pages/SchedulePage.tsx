@@ -31,6 +31,7 @@ import {
   Delete as DeleteIcon,
   Upload as UploadIcon,
   DeleteSweep as DeleteAllIcon,
+  CalendarMonth,
 } from "@mui/icons-material";
 import toast from "react-hot-toast";
 import { schedulesApi } from "../api/api";
@@ -371,9 +372,18 @@ const SchedulePage: React.FC = () => {
           <CircularProgress />
         </Box>
       ) : schedules.length === 0 ? (
-        <Alert severity="info">
-          Nu ai nicio activitate în orar. Adaugă sau importă activitățile din fișier CSV / Excel.
-        </Alert>
+        <Paper sx={{ p: 6, textAlign: "center" }}>
+          <CalendarMonth sx={{ fontSize: 64, color: "grey.300", mb: 2 }} />
+          <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+            Orarul este gol
+          </Typography>
+          <Typography variant="body2" color="text.disabled" sx={{ mb: 3 }}>
+            Adaugă manual activitățile sau importă orarul dintr-un fișier CSV / Excel.
+          </Typography>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => { setEditingSchedule(null); setDialogOpen(true); }}>
+            Adaugă prima activitate
+          </Button>
+        </Paper>
       ) : (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {DAYS_OF_WEEK.map((day) => {

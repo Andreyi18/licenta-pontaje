@@ -6,6 +6,7 @@ import type {
   Timesheet,
   Schedule,
   Document as AppDocument,
+  AppNotification,
 } from "../types";
 
 const API_BASE_URL =
@@ -112,9 +113,11 @@ export const usersApi = {
     departmentId?: string;
     search?: string;
   }): Promise<User[]> => {
-    const query = new URLSearchParams(
-      params as Record<string, string>,
-    ).toString();
+    const clean: Record<string, string> = {};
+    if (params?.role) clean.role = params.role;
+    if (params?.departmentId) clean.departmentId = params.departmentId;
+    if (params?.search) clean.search = params.search;
+    const query = new URLSearchParams(clean).toString();
     return apiClient.get<User[]>(`/users${query ? `?${query}` : ""}`);
   },
 
@@ -311,6 +314,25 @@ export const secretariatApi = {
     });
     if (!response.ok) throw new Error("Eroare la concatenare");
     return response.blob();
+  },
+};
+
+// notifications api
+export const notificationsApi = {
+  getAll: (): Promise<AppNotification[]> => {
+    return apiClient.get<AppNotification[]>("/notifications");
+  },
+
+  getUnreadCount: (): Promise<{ count: number }> => {
+    return apiClient.get<{ count: number }>("/notifications/unread-count");
+  },
+
+  markAsRead: (id: string): Promise<AppNotification> => {
+    return apiClient.patch<AppNotification>(`/notifications/${id}/read`);
+  },
+
+  markAllAsRead: (): Promise<void> => {
+    return apiClient.patch<void>("/notifications/read-all");
   },
 };
 

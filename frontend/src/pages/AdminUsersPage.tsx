@@ -15,6 +15,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
   Chip,
   IconButton,
   Avatar,
@@ -203,6 +204,8 @@ const AdminUsersPage: React.FC = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<User | null>(null);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -289,6 +292,8 @@ const AdminUsersPage: React.FC = () => {
       u.email.toLowerCase().includes(s)
     );
   });
+
+  const paginated = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
     <Box>
@@ -384,7 +389,7 @@ const AdminUsersPage: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filtered.map((user) => (
+                {paginated.map((user) => (
                   <TableRow key={user.id} hover>
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
@@ -477,11 +482,20 @@ const AdminUsersPage: React.FC = () => {
               </TableBody>
             </Table>
           </TableContainer>
-          <Box sx={{ p: 2 }}>
-            <Typography variant="caption" color="text.secondary">
-              {filtered.length} utilizatori
-            </Typography>
-          </Box>
+          <TablePagination
+            component="div"
+            count={filtered.length}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            rowsPerPageOptions={[5, 10, 25]}
+            labelRowsPerPage="Rânduri pe pagină:"
+            labelDisplayedRows={({ from, to, count }) => `${from}–${to} din ${count}`}
+          />
         </Paper>
       )}
 

@@ -129,4 +129,49 @@ Acest document descrie funcționalitățile implementate în sesiunea curentă d
 
 ---
 
-*Document generat automat pe baza modificărilor din sesiunea de dezvoltare din 5 Aprilie 2026.*
+## 12. Sistem Notificări In-App
+
+**Data:** 5 Aprilie 2026
+
+### Backend
+- **`NotificationRepository.java`** — repository JPA cu metode: `findByUserIdOrderByCreatedAtDesc`, `countByUserIdAndIsReadFalse`, `markAllReadByUserId` (query JPQL bulk update).
+- **`NotificationService.java`** — serviciu cu: `getForUser`, `getUnreadCount`, `markAsRead`, `markAllAsRead`, `create`.
+- **`NotificationController.java`** — 4 endpoint-uri:
+  - `GET /api/notifications` — lista notificărilor utilizatorului curent
+  - `GET /api/notifications/unread-count` — număr necitite
+  - `PATCH /api/notifications/{id}/read` — marchează una ca citită
+  - `PATCH /api/notifications/read-all` — marchează toate ca citite
+- **Notificări automate** în `TimesheetService`:
+  - La `submit()` → notificare tip SYSTEM: „Pontaj trimis"
+  - La `approve()` → notificare tip SYSTEM: „Pontaj aprobat" (trimisă utilizatorului al cărui pontaj a fost aprobat)
+
+### Frontend
+- **`MainLayout.tsx`** — iconița de notificări din AppBar acum afișează un badge roșu cu numărul de notificări necitite. Click deschide un Popover cu:
+  - Lista notificărilor (cele necitite au fundal albastru deschis)
+  - Click pe o notificare necitită → o marchează ca citită
+  - Buton „Marchează toate" pentru bulk read
+  - Polling automat la 60 secunde
+- **`types/index.ts`** — adăugat interfața `AppNotification`
+- **`api.ts`** — adăugat `notificationsApi` cu toate cele 4 operații
+
+---
+
+## 13. Paginare Tabele
+
+**Data:** 5 Aprilie 2026
+
+- **`AdminUsersPage.tsx`** — `TablePagination` MUI cu 5/10/25 rânduri pe pagină, etichete în română.
+- **`SecretariatDashboardPage.tsx`** — `TablePagination` similar, afișat doar când există date.
+
+---
+
+## 14. Empty States Îmbunătățite
+
+**Data:** 5 Aprilie 2026
+
+- **`SchedulePage.tsx`** — empty state cu iconiță CalendarMonth, mesaj descriptiv și buton direct de adăugare.
+- **`DocumentsPage.tsx`** — empty state cu iconiță PDF și mesaj contextual (indică să trimită pontajul dacă e DRAFT).
+
+---
+
+*Document actualizat pe 5 Aprilie 2026 — Milestone 7–14 complete.*
