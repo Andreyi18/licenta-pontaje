@@ -18,14 +18,16 @@ import java.util.UUID;
 public interface TimesheetRepository extends JpaRepository<Timesheet, UUID> {
 
     /**
-     * Găsește toate pontajele pentru un utilizator
+     * Găsește toate pontajele pentru un utilizator (cu user+department încărcate eager)
      */
-    List<Timesheet> findByUserIdOrderByYearDescMonthDesc(UUID userId);
+    @Query("SELECT t FROM Timesheet t JOIN FETCH t.user u LEFT JOIN FETCH u.department WHERE u.id = :userId ORDER BY t.year DESC, t.month DESC")
+    List<Timesheet> findByUserIdOrderByYearDescMonthDesc(@Param("userId") UUID userId);
 
     /**
-     * Găsește pontajul pentru un utilizator, lună și an specific
+     * Găsește pontajul pentru un utilizator, lună și an specific (cu user+department eager)
      */
-    Optional<Timesheet> findByUserIdAndMonthAndYear(UUID userId, Integer month, Integer year);
+    @Query("SELECT t FROM Timesheet t JOIN FETCH t.user u LEFT JOIN FETCH u.department WHERE u.id = :userId AND t.month = :month AND t.year = :year")
+    Optional<Timesheet> findByUserIdAndMonthAndYear(@Param("userId") UUID userId, @Param("month") Integer month, @Param("year") Integer year);
 
     /**
      * Verifică dacă există pontaj pentru utilizator, lună și an
@@ -35,24 +37,27 @@ public interface TimesheetRepository extends JpaRepository<Timesheet, UUID> {
     /**
      * Găsește toate pontajele după status
      */
-    List<Timesheet> findByStatus(TimesheetStatus status);
+    @Query("SELECT t FROM Timesheet t JOIN FETCH t.user u LEFT JOIN FETCH u.department WHERE t.status = :status")
+    List<Timesheet> findByStatus(@Param("status") TimesheetStatus status);
 
     /**
      * Găsește toate pontajele pentru o lună și an
      */
-    List<Timesheet> findByMonthAndYearOrderByUserLastNameAsc(Integer month, Integer year);
+    @Query("SELECT t FROM Timesheet t JOIN FETCH t.user u LEFT JOIN FETCH u.department WHERE t.month = :month AND t.year = :year ORDER BY u.lastName ASC")
+    List<Timesheet> findByMonthAndYearOrderByUserLastNameAsc(@Param("month") Integer month, @Param("year") Integer year);
 
     /**
      * Găsește pontajele trimise pentru o lună și an
      */
+    @Query("SELECT t FROM Timesheet t JOIN FETCH t.user u LEFT JOIN FETCH u.department WHERE t.month = :month AND t.year = :year AND t.status = :status ORDER BY u.lastName ASC")
     List<Timesheet> findByMonthAndYearAndStatusOrderByUserLastNameAsc(
-        Integer month, Integer year, TimesheetStatus status);
+        @Param("month") Integer month, @Param("year") Integer year, @Param("status") TimesheetStatus status);
 
     /**
      * Găsește pontajele dintr-un departament pentru o lună și an
      */
-    @Query("SELECT t FROM Timesheet t WHERE t.user.department.id = :departmentId " +
-           "AND t.month = :month AND t.year = :year ORDER BY t.user.lastName ASC")
+    @Query("SELECT t FROM Timesheet t JOIN FETCH t.user u LEFT JOIN FETCH u.department WHERE u.department.id = :departmentId " +
+           "AND t.month = :month AND t.year = :year ORDER BY u.lastName ASC")
     List<Timesheet> findByDepartmentAndPeriod(
         @Param("departmentId") UUID departmentId,
         @Param("month") Integer month,
@@ -78,4 +83,10 @@ public interface TimesheetRepository extends JpaRepository<Timesheet, UUID> {
      * Numără pontajele trimise pentru o lună și an
      */
     long countByMonthAndYearAndStatus(Integer month, Integer year, TimesheetStatus status);
+
+    /**
+     * Găsește un pontaj după id cu user+department eager
+     */
+    @Query("SELECT t FROM Timesheet t JOIN FETCH t.user u LEFT JOIN FETCH u.department WHERE t.id = :id")
+    Optional<Timesheet> findByIdWithUser(@Param("id") UUID id);
 }

@@ -55,6 +55,7 @@ const activityColors: Record<ActivityType, string> = {
 interface ScheduleDialogProps {
   open: boolean;
   initial: Partial<Schedule> | null;
+  existingSchedules: Schedule[];
   onClose: () => void;
   onSave: (data: Partial<Schedule>) => Promise<void>;
 }
@@ -62,6 +63,7 @@ interface ScheduleDialogProps {
 const ScheduleDialog: React.FC<ScheduleDialogProps> = ({
   open,
   initial,
+  existingSchedules,
   onClose,
   onSave,
 }) => {
@@ -99,15 +101,27 @@ const ScheduleDialog: React.FC<ScheduleDialogProps> = ({
     try {
       await onSave({ dayOfWeek, timeSlot, discipline, room, activityType });
       onClose();
+    } catch {
+      // eroarea e deja afișată în handleSave din SchedulePage
     } finally {
       setSaving(false);
     }
   };
 
+  // Conflict: există deja o activitate în aceeași zi+interval (alta decât cea editată)
+  const hasConflict = existingSchedules.some(
+    (s) => s.dayOfWeek === dayOfWeek && s.timeSlot === timeSlot && s.id !== initial?.id,
+  );
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>{initial?.id ? "Editează activitate" : "Adaugă activitate"}</DialogTitle>
       <DialogContent dividers>
+        {hasConflict && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            Există deja o activitate în <strong>{DAYS_OF_WEEK.find((d) => d.value === dayOfWeek)?.label}</strong> la intervalul <strong>{timeSlot}</strong>. Salvarea va fi blocată de server.
+          </Alert>
+        )}
         <FormControl fullWidth sx={{ mb: 2 }}>
           <InputLabel>Zi</InputLabel>
           <Select
@@ -214,16 +228,21 @@ const SchedulePage: React.FC = () => {
   }, []);
 
   const handleSave = async (data: Partial<Schedule>) => {
-    if (editingSchedule?.id) {
-      const updated = await schedulesApi.update(editingSchedule.id, data);
-      setSchedules((prev) =>
-        prev.map((s) => (s.id === updated.id ? updated : s)),
-      );
-      toast.success("Activitate actualizată");
-    } else {
-      const created = await schedulesApi.create(data);
-      setSchedules((prev) => [...prev, created]);
-      toast.success("Activitate adăugată");
+    try {
+      if (editingSchedule?.id) {
+        const updated = await schedulesApi.update(editingSchedule.id, data);
+        setSchedules((prev) =>
+          prev.map((s) => (s.id === updated.id ? updated : s)),
+        );
+        toast.success("Activitate actualizată");
+      } else {
+        const created = await schedulesApi.create(data);
+        setSchedules((prev) => [...prev, created]);
+        toast.success("Activitate adăugată");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Eroare la salvare. Verificați datele introduse.");
+      throw err; // re-throw ca dialogul să rămână deschis
     }
   };
 
@@ -484,6 +503,7 @@ const SchedulePage: React.FC = () => {
       <ScheduleDialog
         open={dialogOpen}
         initial={editingSchedule}
+        existingSchedules={schedules}
         onClose={() => setDialogOpen(false)}
         onSave={handleSave}
       />

@@ -17,22 +17,12 @@ RUN mvn clean package -DskipTests
 
 
 # ---------- RUN STAGE ----------
-FROM eclipse-temurin:17-jre
+FROM maven:3.9.6-amazoncorretto-17
 
 WORKDIR /app
 
-# Install curl for healthcheck
-RUN apt-get update \
-    && apt-get install -y curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create non-root user
-RUN groupadd -r pontaje \
-    && useradd -r -g pontaje pontaje \
-    && mkdir -p /app/documents \
-    && chown -R pontaje:pontaje /app
-
-USER pontaje
+# Create documents directory
+RUN mkdir -p /app/documents
 
 # Copy jar from build stage
 COPY --from=build /app/target/*.jar app.jar

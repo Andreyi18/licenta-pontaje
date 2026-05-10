@@ -63,6 +63,21 @@ public class TimesheetEntryResponse {
 
     public static Builder builder() { return new Builder(); }
 
+    // === Getters ===
+    public UUID getId() { return id; }
+    public UUID getTimesheetId() { return timesheetId; }
+    public LocalDate getEntryDate() { return entryDate; }
+    public String getDayOfWeek() { return dayOfWeek; }
+    public String getTimeSlot() { return timeSlot; }
+    public String getStartTime() { return startTime; }
+    public String getEndTime() { return endTime; }
+    public HourType getHourType() { return hourType; }
+    public String getHourTypeDisplay() { return hourTypeDisplay; }
+    public String getHourTypeColor() { return hourTypeColor; }
+    public String getActivity() { return activity; }
+    public int getDurationHours() { return durationHours; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+
     private UUID id;
     private UUID timesheetId;
     private LocalDate entryDate;

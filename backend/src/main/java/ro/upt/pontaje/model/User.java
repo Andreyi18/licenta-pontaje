@@ -130,7 +130,7 @@ public class User implements UserDetails {
     @Column(nullable = false, length = 20)
     private UserRole role;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "department_id")
     private Department department;
 

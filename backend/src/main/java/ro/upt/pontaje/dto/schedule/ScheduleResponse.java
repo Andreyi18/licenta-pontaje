@@ -83,6 +83,22 @@ public class ScheduleResponse {
 
     public static Builder builder() { return new Builder(); }
 
+    // === Getters ===
+    public UUID getId() { return id; }
+    public UUID getUserId() { return userId; }
+    public DayOfWeek getDayOfWeek() { return dayOfWeek; }
+    public String getDayOfWeekDisplay() { return dayOfWeekDisplay; }
+    public String getTimeSlot() { return timeSlot; }
+    public String getStartTime() { return startTime; }
+    public String getEndTime() { return endTime; }
+    public String getDiscipline() { return discipline; }
+    public String getRoom() { return room; }
+    public ActivityType getActivityType() { return activityType; }
+    public String getActivityTypeDisplay() { return activityTypeDisplay; }
+    public int getDurationHours() { return durationHours; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+
     public static ScheduleResponse fromEntity(Schedule schedule) {
         return ScheduleResponse.builder()
                 .id(schedule.getId())

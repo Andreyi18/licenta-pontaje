@@ -13,9 +13,25 @@ import java.util.stream.Collectors;
  * DTO pentru răspunsul cu informații pontaj
  */
 public class TimesheetResponse {
-    public TimesheetStatus getStatus() {
-        return status;
-    }
+    // === Getters ===
+    public UUID getId() { return id; }
+    public UUID getUserId() { return userId; }
+    public String getUserName() { return userName; }
+    public String getUserEmail() { return userEmail; }
+    public String getDepartmentName() { return departmentName; }
+    public Integer getMonth() { return month; }
+    public Integer getYear() { return year; }
+    public String getPeriodDisplay() { return periodDisplay; }
+    public TimesheetStatus getStatus() { return status; }
+    public String getStatusDisplay() { return statusDisplay; }
+    public int getTotalNormaHours() { return totalNormaHours; }
+    public int getTotalPlataOraHours() { return totalPlataOraHours; }
+    public int getTotalHours() { return totalHours; }
+    public List<TimesheetEntryResponse> getEntries() { return entries; }
+    public LocalDateTime getSubmittedAt() { return submittedAt; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public boolean isEditable() { return editable; }
 
     public TimesheetResponse() {}
     public TimesheetResponse(UUID id, UUID userId, String userName, String userEmail, String departmentName, Integer month, Integer year, String periodDisplay, TimesheetStatus status, String statusDisplay, int totalNormaHours, int totalPlataOraHours, int totalHours, List<TimesheetEntryResponse> entries, LocalDateTime submittedAt, LocalDateTime createdAt, LocalDateTime updatedAt, boolean editable) {

@@ -60,7 +60,7 @@ public class TimesheetService {
      */
     @Transactional(readOnly = true)
     public Timesheet findById(UUID id) {
-        return timesheetRepository.findById(id)
+        return timesheetRepository.findByIdWithUser(id)
             .orElseThrow(() -> new ResourceNotFoundException("Pontajul nu a fost găsit"));
     }
 
@@ -95,7 +95,10 @@ public class TimesheetService {
             .build();
 
         Timesheet savedTimesheet = timesheetRepository.save(timesheet);
-        return TimesheetResponse.fromEntity(savedTimesheet, true);
+        // Reload cu user+department eager pentru a evita LazyInitializationException
+        Timesheet reloaded = timesheetRepository.findByIdWithUser(savedTimesheet.getId())
+            .orElse(savedTimesheet);
+        return TimesheetResponse.fromEntity(reloaded, true);
     }
 
     /**

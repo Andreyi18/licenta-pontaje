@@ -167,15 +167,23 @@ const DashboardPage: React.FC = () => {
     return act;
   }, [currentTimesheet, documents, currentMonth, currentYear]);
 
-  const quickActions = [
-    {
-      title: "Completează pontajul",
-      path: "/timesheet",
-      icon: <TimesheetIcon />,
-    },
-    { title: "Vezi orarul", path: "/schedule", icon: <CalendarIcon /> },
-    { title: "Generează Anexă", path: "/timesheet", icon: <DocumentIcon /> },
-  ];
+  const quickActions = hasRole([UserRole.CADRU_DIDACTIC])
+    ? [
+        {
+          title: "Completează pontajul",
+          path: "/timesheet",
+          icon: <TimesheetIcon />,
+        },
+        { title: "Vezi orarul", path: "/schedule", icon: <CalendarIcon /> },
+        { title: "Generează Anexă", path: "/documents", icon: <DocumentIcon /> },
+      ]
+    : [
+        {
+          title: "Vezi centralizatorul",
+          path: "/secretariat",
+          icon: <TimesheetIcon />,
+        },
+      ];
 
   if (loading) {
     return (

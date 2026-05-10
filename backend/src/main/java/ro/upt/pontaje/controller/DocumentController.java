@@ -82,9 +82,21 @@ public class DocumentController {
      * GET /api/documents
      */
     @GetMapping
-    public ResponseEntity<List<Document>> getMyDocuments(@AuthenticationPrincipal User user) {
-        List<Document> documents = documentRepository.findByUserIdOrderByGeneratedAtDesc(user.getId());
-        return ResponseEntity.ok(documents);
+    public ResponseEntity<List<DocumentListResponse>> getMyDocuments(@AuthenticationPrincipal User user) {
+        List<DocumentListResponse> docs = documentRepository
+                .findByUserIdOrderByGeneratedAtDesc(user.getId())
+                .stream()
+                .map(d -> new DocumentListResponse(
+                        d.getId(),
+                        d.getUser().getId(),
+                        d.getTimesheet().getId(),
+                        d.getAnnexType(),
+                        d.getFilePath(),
+                        d.getFileName(),
+                        d.getGeneratedAt() != null ? d.getGeneratedAt().toString() : ""
+                ))
+                .toList();
+        return ResponseEntity.ok(docs);
     }
 
     /**
@@ -94,6 +106,19 @@ public class DocumentController {
         UUID id,
         String fileName,
         AnnexType annexType,
+        String generatedAt
+    ) {}
+
+    /**
+     * DTO pentru lista documente (câmpuri plate, fără relații JPA)
+     */
+    private record DocumentListResponse(
+        UUID id,
+        UUID userId,
+        UUID timesheetId,
+        AnnexType annexType,
+        String filePath,
+        String fileName,
         String generatedAt
     ) {}
 }

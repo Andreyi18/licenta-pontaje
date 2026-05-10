@@ -196,6 +196,11 @@ const EntryDialog: React.FC<EntryDialogProps> = ({
             <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
               Adaugă oră
             </Typography>
+            {existingEntries.some((e) => e.timeSlot === timeSlot) && (
+              <Alert severity="warning" sx={{ mb: 2 }}>
+                Intervalul <strong>{timeSlot}</strong> este deja înregistrat — salvarea va înlocui intrarea existentă.
+              </Alert>
+            )}
             <FormControl fullWidth sx={{ mb: 2 }}>
               <InputLabel>Interval orar</InputLabel>
               <Select
@@ -322,6 +327,8 @@ const TimesheetPage: React.FC = () => {
   ) => {
     if (!timesheet || !selectedDate) return;
     const iso = formatDateISO(selectedDate);
+    // Detectăm dacă există deja o intrare pentru același interval orar
+    const isUpdate = selectedEntries.some((e) => e.timeSlot === timeSlot);
     try {
       const updated = await timesheetsApi.addEntry(timesheet.id, {
         entryDate: iso,
@@ -332,7 +339,14 @@ const TimesheetPage: React.FC = () => {
       setTimesheet(updated);
       const newEntries = updated.entries?.filter((e) => e.entryDate === iso) ?? [];
       setSelectedEntries(newEntries);
-      toast.success("Oră adăugată");
+      if (isUpdate) {
+        toast("Intervalul era deja ocupat — intrarea a fost actualizată", {
+          icon: "⚠️",
+          style: { background: "#FF9800", color: "#fff" },
+        });
+      } else {
+        toast.success("Oră adăugată cu succes");
+      }
     } catch (err: any) {
       toast.error(err.message || "Eroare la adăugare");
     }
